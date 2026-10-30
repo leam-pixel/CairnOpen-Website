@@ -70,6 +70,32 @@ def get_annual_tilted_irradiance_average(
         inplace=True,
     )
 
-    return result_df
+    #suppression de la data du 29 février
+    mask = ((result_df["Mois"] == 2) & (result_df["Jour"] == 29)) == False     
+    result_df = result_df[mask]
 
-get_annual_tilted_irradiance_average(lat=48.8566, lon=2.3522, tilt=30, azimuth=0).head(24)
+    #modification du tableau pour correspondre au format Cairn
+    Misenforme_df = result_df[["Heure","G_panneau_W_m2"]] 
+    Misenforme_df["Heure"] = Misenforme_df["Heure"]*3600
+    Misenforme_df["G_panneau_W_m2"] = Misenforme_df["G_panneau_W_m2"]/(10**6)
+    Misenforme_df = Misenforme_df.rename(columns={"Heure": "Secondes"})
+    Misenforme_df = Misenforme_df.rename(columns={"G_panneau_W_m2": "G_panneau_MW_m2"})
+
+    #création des 4 premières colonnes
+    entête = {          
+    "Secondes": ["Time","01/01/2023  00:00:00", "s", "true"], 
+    "G_panneau_MW_m2": ["PV.ProdElecParM2","Production PV par m2 de panneau centre France", "MW/m2", "true"],
+    }
+
+    entête_df = pd.DataFrame(entête)
+
+    Misenforme_df = pd.concat((entête_df,Misenforme_df), ignore_index=True)
+    
+
+    
+
+
+    
+    return Misenforme_df
+
+#exemple d'appel : get_annual_tilted_irradiance_average(lat=48.8566, lon=2.3522, tilt=30, azimuth=0) 
